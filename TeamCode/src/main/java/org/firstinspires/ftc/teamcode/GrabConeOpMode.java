@@ -29,16 +29,11 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-//import com.qualcomm.robotcore.util.Range;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -58,63 +53,12 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class GrabConeOpMode extends LinearOpMode {
 
     // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor linearSlide = null;
-    private Servo theClawServo = null;
-
-
-    //figure out how to make a log output to debug
-    //private android.util.Log log = Telemetry.log();
-
-    SlidePosition currentSlidePosition;
-    ClawPosition currentClawPosition;
-    com.qualcomm.robotcore.hardware.DcMotor.Direction motorDirection;
-
-    private void MoveSlide(SlidePosition newPosition) {
-
-        telemetry.addData("MoveSlide", newPosition.toString());
-        telemetry.update();
-
-        if (currentSlidePosition!=newPosition){
-            //linearSlide.setDirection(motorDirection);
-            linearSlide.setTargetPosition(newPosition.value);
-            currentSlidePosition=newPosition;
-        }
-
-    }
-
-    private void buttonCheck(){
-        if (gamepad1.a){
-            telemetry.log();
-            MoveSlide(SlidePosition.START);
-        }
-        else if (gamepad1.b){
-            MoveSlide(SlidePosition.LOW);
-        }
-        else if (gamepad1.x){
-            MoveSlide(SlidePosition.MEDIUM);
-        }
-        else if (gamepad1.y){
-            MoveSlide(SlidePosition.HIGH);
-        }
-        else if(gamepad1.left_bumper) {
-            if(currentClawPosition == currentClawPosition.OPEN) {
-                //theClawServo.setPosition(ClawPosition.CLOSE.value);
-                currentClawPosition = currentClawPosition.CLOSE;
-            }
-            else{
-                //theClawServo.setPosition(ClawPosition.OPEN.value);
-                currentClawPosition=currentClawPosition.OPEN;
-            }
-        }else if( gamepad1.right_bumper) {
-            MoveSlide(SlidePosition.HIGHEST);
-        }
-    }
-
-    //enum Direction {
-        //REVERSE,
-        //FORWARD
-    //}
+    private ElapsedTime servoTimeOut = new ElapsedTime();
+    private DcMotor linearSlide = hardwareMap.get(DcMotor.class, "slide_motor");
+    private Servo theClawServo = hardwareMap.get(Servo.class, "servo");
+    private final double DEBOUNCE_TIME_MS = 500;
+    private SlidePosition currentSlidePosition;
+    private ClawPosition currentClawPosition;
 
     enum SlidePosition {
         START(0),
@@ -128,15 +72,75 @@ public class GrabConeOpMode extends LinearOpMode {
             value = _value;
         }
     }
-    enum ClawPosition {
-        OPEN(0),
-        CLOSE(1);
 
-        public final int value;
-        private ClawPosition(int _value) {
+    private void MoveSlide(SlidePosition newPosition) {
+        telemetry.addData("MoveSlide", newPosition.toString());
+
+        if (currentSlidePosition!=newPosition){
+            telemetry.addLine("YOOOOOO");
+            linearSlide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            linearSlide.setTargetPosition(newPosition.value);
+            linearSlide.setPower(.5);
+            currentSlidePosition=newPosition;
+        }else {
+            telemetry.addLine("NOT YOOOOO");
+        }
+        telemetry.update();
+
+        //TODO: Re-home the motor to prevent encoder drifting here
+        //TODO: if slide newPosition == SlidePosition.START, set Power(0), and stop and reset encoder
+//        if (newPosition == SlidePosition.START){
+//            linearSlide.setPower(0);
+//            linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        }
+    }
+
+    enum ClawPosition {
+        OPEN(0.5),
+        CLOSE(0.35);
+
+        public final double value;
+        private ClawPosition(double _value) {
             value = _value;
         }
     }
+
+    private void MoveClaw(){
+        telemetry.addData("MoveClaw from", currentClawPosition);
+        telemetry.update();
+
+        // toggling claw between open and close
+        if(currentClawPosition == currentClawPosition.OPEN) {
+            theClawServo.setPosition(ClawPosition.CLOSE.value);
+            currentClawPosition = currentClawPosition.CLOSE;
+        }
+        else{
+            theClawServo.setPosition(ClawPosition.OPEN.value);
+            currentClawPosition=currentClawPosition.OPEN;
+        }
+    }
+
+    private void buttonCheck(){
+        if (gamepad1.a){
+            MoveSlide(SlidePosition.START);
+        }
+        else if (gamepad1.b){
+            MoveSlide(SlidePosition.LOW);
+        }
+        else if (gamepad1.x){
+            MoveSlide(SlidePosition.MEDIUM);
+        }
+        else if (gamepad1.y){
+            MoveSlide(SlidePosition.HIGH);
+        }
+        else if(gamepad1.left_bumper && servoTimeOut.milliseconds() > DEBOUNCE_TIME_MS) {
+            MoveClaw();
+            servoTimeOut.reset();
+        }else if( gamepad1.right_bumper) {
+            MoveSlide(SlidePosition.HIGHEST);
+        }
+    }
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
@@ -145,34 +149,24 @@ public class GrabConeOpMode extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        linearSlide  = hardwareMap.get(DcMotor.class, "linear_slide");
-        //theClawServo = hardwareMap.get(Servo.class, "clawServo");
-
-        // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
-        // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
-        // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        //leftDrive.setDirection(DcMotor.Direction.REVERSE);
-        //rightDrive.setDirection(DcMotor.Direction.FORWARD);
+        linearSlide.setDirection(DcMotor.Direction.REVERSE);
+        linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
-        runtime.reset();
+        servoTimeOut.reset();
+
         //assume that slide is manually moved to the start position
         //with the claw closed
-        linearSlide.setPower(.5);
+        linearSlide.setPower(0);
         currentSlidePosition = SlidePosition.START;
         currentClawPosition = ClawPosition.CLOSE;
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            // Checking gamepad buttons every 50 milliseconds
+            // Checking gamepad buttons
             buttonCheck();
-            sleep(50);
-
-
-            // Show the elapsed game time and wheel power
-
         }
     }
 }

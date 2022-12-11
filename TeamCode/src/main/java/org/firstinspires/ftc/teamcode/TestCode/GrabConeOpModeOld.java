@@ -53,9 +53,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="GrabConeOpMode", group="Linear Opmode")
+@TeleOp(name="GrabConeOpModeOld", group="Linear Opmode")
 
-public class GrabConeOpMode extends LinearOpMode {
+public class GrabConeOpModeOld extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
