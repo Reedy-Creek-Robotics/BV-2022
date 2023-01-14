@@ -1,16 +1,23 @@
 package org.firstinspires.ftc.teamcode.TestCode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 @Autonomous
-
-public class Go4Blocks extends LinearOpMode {
+@Disabled
+public class AutonomousTestPlan extends LinearOpMode {
     private DcMotor FL = null;
     private DcMotor FR = null;
     private DcMotor BL = null;
     private DcMotor BR = null;
+    private DcMotor linearSlide;
+    private Servo clawServo;
+
+    {
+    }
 
     public int DistanceOfInches(double Revolutions) {
         int Pos = FL.getCurrentPosition() + (int)(538*Revolutions);
@@ -52,6 +59,7 @@ public class Go4Blocks extends LinearOpMode {
         BL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+    
 
     @Override
     public void runOpMode() {

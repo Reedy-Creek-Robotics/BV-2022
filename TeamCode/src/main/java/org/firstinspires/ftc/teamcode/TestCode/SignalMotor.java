@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.TestCode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @TeleOp
-public class SignallingPath extends LinearOpMode {
+@Disabled
+public class SignalMotor extends LinearOpMode {
     private DcMotor FL = null;
     private DcMotor FR = null;
     private DcMotor BL = null;

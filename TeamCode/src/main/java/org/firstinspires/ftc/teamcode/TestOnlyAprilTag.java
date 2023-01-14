@@ -36,7 +36,7 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 
 import java.util.ArrayList;
 
-@TeleOp
+@TeleOp(name="Test April Tag Camera Only",group = "testing")
 public class TestOnlyAprilTag extends LinearOpMode {
     private ElapsedTime aprilTagTimeout = new ElapsedTime();
     int timeOutTime = 3 * 1000;

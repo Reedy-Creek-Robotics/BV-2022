@@ -54,6 +54,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  */
 
 @TeleOp(name="GrabConeOpModeOld", group="Linear Opmode")
+@Disabled
 
 public class GrabConeOpModeOld extends LinearOpMode {
 
